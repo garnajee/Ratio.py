@@ -1,5 +1,7 @@
 # Ratio.py
 
+[![Update Transmission Version](https://github.com/garnajee/Ratio.py/actions/workflows/update-transmission-version.yml/badge.svg)](https://github.com/garnajee/Ratio.py/actions/workflows/update-transmission-version.yml)
+
 Ratio.py is a small command line RatioMaster.Net like in Python3. It fakes upload stats of a torrent. 
 Current emulators available are:
 
