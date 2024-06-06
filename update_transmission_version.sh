@@ -14,7 +14,12 @@ get_current_transmission_version() {
 format_version_number() {
     version=$1
     formatted_version=$(echo $version | tr -d '.')   # Remove dots
-    printf "%04d" $formatted_version                 # Ensure it has 4 digits
+    length=${#formatted_version}                     # Get the length of the formatted version
+    if [ $length -eq 3 ]; then
+        echo "${formatted_version}0"                 # Append zero if length is 3
+    else
+        echo "$formatted_version"                    # Otherwise, return the formatted version as is
+    fi
 }
 
 # Check if update is needed
