@@ -1,0 +1,40 @@
+name: Update Transmission Version
+
+on:
+  schedule:
+    - cron: "0 0 1 */6 *" # Run every 6 months at 00:00 on day 1
+  workflow_dispatch:  # Allow manual trigger
+
+jobs:
+  update_transmission:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Set up Git
+      run: |
+        git config --global user.email "github-actions@github.com"
+        git config --global user.name "GitHub Actions"
+
+    - name: Run update script
+      run: ./update_transmission_version.sh
+
+    - name: Create Pull Request
+      id: create_pr
+      uses: peter-evans/create-pull-request@v3
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        commit-message: Update Transmission version to ${{ steps.update_transmission.outputs.latest_version }}
+        branch: update-transmission-version
+        title: Update Transmission version to ${{ steps.update_transmission.outputs.latest_version }}
+        body: |
+          This PR updates the Transmission version from ${{ steps.update_transmission.outputs.current_version }} to ${{ steps.update_transmission.outputs.latest_version }}.
+
+    - name: Merge Pull Request
+      if: ${{ steps.create_pr.outputs.pull-request-url }}
+      run: |
+        pr_number=$(echo ${{ steps.create_pr.outputs.pull-request-url }} | awk -F'/' '{print $NF}')
+        gh pr merge $pr_number --admin --squash --delete-branch
+
