@@ -28,7 +28,7 @@ jobs:
       id: create_pr
       uses: peter-evans/create-pull-request@v3
       with:
-        token: ${{ secrets.GITHUB_TOKEN }}
+        token: ${{ secrets.ACTION_PAT }}
         commit-message: Update Transmission version to ${{ steps.update_transmission.outputs.latest_version }}
         branch: update-transmission-version
         title: Update Transmission version to ${{ steps.update_transmission.outputs.latest_version }}
@@ -40,4 +40,6 @@ jobs:
       run: |
         pr_number=$(echo ${{ steps.create_pr.outputs.pull-request-url }} | awk -F'/' '{print $NF}')
         gh pr merge $pr_number --admin --squash --delete-branch
+      env:
+        GITHUB_TOKEN: ${{ secrects.ACTION_PAT }}
 
