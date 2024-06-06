@@ -3,7 +3,7 @@
 Ratio.py is a small command line RatioMaster.Net like in Python3. It fakes upload stats of a torrent. 
 Current emulators available are:
 
-- Transmission 3.00
+- Transmission 4.0.6
 
 ### Requirements
 

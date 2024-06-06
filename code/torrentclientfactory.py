@@ -1,9 +1,9 @@
 import random
 import string
 
-class Transmission300():
+class Transmission406():
     def __init__(self, info_hash):
-        self.name = "Transmission 3.00"
+        self.name = "Transmission/4.0.6"
         parameters = {}
         # urlencoded 20-byte SHA1 hash of the value of the info key from the Metainfo file
         parameters['info_hash'] = info_hash
@@ -23,7 +23,7 @@ class Transmission300():
 
     def get_headers(self):
         headers = {}
-        headers['User-Agent'] = 'Transmission/3.00'
+        headers['User-Agent'] = 'Transmission/4.0.6'
         headers['Accept'] = '*/*'
         headers['Accept-Encoding'] = 'Accept-Encoding: gzip;q=1.0,  deflate, identity'
         return headers
@@ -51,7 +51,7 @@ class Transmission300():
     def generate_peer_id(self):
         chars = string.ascii_lowercase + string.digits
         rand_id = self.id_generator(chars, 12)
-        peer_id = "-TR3000-" + rand_id
+        peer_id = "-TR4060-" + rand_id
         return peer_id
 
     def generate_key(self):
