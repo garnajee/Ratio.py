@@ -41,5 +41,5 @@ jobs:
         pr_number=$(echo ${{ steps.create_pr.outputs.pull-request-url }} | awk -F'/' '{print $NF}')
         gh pr merge $pr_number --admin --squash --delete-branch
       env:
-        GITHUB_TOKEN: ${{ secrects.ACTION_PAT }}
+        GITHUB_TOKEN: ${{ secrets.ACTION_PAT }}
 
