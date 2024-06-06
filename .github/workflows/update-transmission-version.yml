@@ -18,6 +18,9 @@ jobs:
         git config --global user.email "github-actions@github.com"
         git config --global user.name "GitHub Actions"
 
+    - name: Make update script executable
+      run: chmod +x ./update_transmission_version.sh
+
     - name: Run update script
       run: ./update_transmission_version.sh
 
