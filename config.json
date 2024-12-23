@@ -1,4 +1,4 @@
 {
-    "torrent": "./file.torrent",
-    "upload":"350"
+    "torrents": "torrentsfolder",
+    "upload": "350"
 }

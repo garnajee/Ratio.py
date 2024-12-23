@@ -42,7 +42,7 @@ Then configure your `config.json` file.
 
 ```js
 {
-   "torrent": "<Torrent file path>",
+   "torrent": "<Torrent folder path>",
    "upload": "<Upload speed (kB/s)>"
 }
 ```

@@ -11,14 +11,15 @@ from tqdm import tqdm
 from time import sleep
 
 from struct import unpack
+import os
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 
 class process_torrent():
-
     def __init__(self, configuration):
         self.configuration = configuration
         self.open_torrent()
+        self.timer = 0
         self.torrentclient = Transmission406(self.tracker_info_hash())
 
     def open_torrent(self):
@@ -28,11 +29,14 @@ class process_torrent():
         self.b_enc = bencoding()
         self.metainfo = self.b_enc.bdecode(data)
         self.info = self.metainfo['info']
+        self.files = []
         if 'length' not in self.info:
             self.info['length'] = 0
             for file in self.info['files']:
                 self.info['length'] += file['length']
-            print(pretty_data(self.info['files']))
+                self.files.append(file['path'])
+            # print(pretty_data(self.info['files']))
+            # print(self.files)
 
     def tracker_info_hash(self):
         raw_info = self.b_enc.get_dict('info')
@@ -60,16 +64,12 @@ class process_torrent():
         params = tc.get_query(uploaded=0,
                               downloaded=0,
                               event='started')
-
-        print('----------- First Command to Tracker --------')
         content = self.send_request(params, headers)
         self.tracker_response_parser(content)
 
     def tracker_response_parser(self, tr_response):
         b_enc = bencoding()
         response = b_enc.bdecode(tr_response)
-        print('----------- Received Tracker Response --------')
-        print(pretty_data(response))
         raw_peers = b_enc.get_dict('peers')
         i = 0
         peers = []
@@ -83,38 +83,34 @@ class process_torrent():
             peers.append((ip, port))
         self.interval = response['interval']
 
-    def wait(self):
-        random_badtime = random.randint(10,15)*60   # interval to send request betwen 10min and 15min
-        self.interval = random_badtime
-        pbar = tqdm(total=self.interval)
-        print('sleep: {}'.format(self.interval))
-        t = 0
-        while t < (self.interval):
-            t += 1
-            pbar.update(1)
-            sleep(1)
-        pbar.close()
+def seedqueue(queue, time):
+    while time > 0:
+        waitingqueue = ""
+        for torrent in queue:
+            if torrent.timer <= 0:
+                torrent.tracker_start_request()
 
-    def tracker_process(self):
-        while True:
-            self.tracker_start_request()
+                min_up = torrent.interval-(torrent.interval*0.1)
+                max_up = torrent.interval
+                randomize_upload = random.randint(min_up, max_up)
+                uploaded = int(torrent.configuration['upload'])*1000*randomize_upload
 
-            print('----------- Sending Command to Tracker --------')
+                downloaded = 0
 
-            # get upload
-            min_up = self.interval-(self.interval*0.1)
-            max_up = self.interval
-            randomize_upload = random.randint(min_up, max_up)
-            uploaded = int(self.configuration['upload'])*1000*randomize_upload
+                tc = torrent.torrentclient
+                headers = tc.get_headers()
+                params = tc.get_query(uploaded=uploaded,
+                                        downloaded=downloaded,
+                                        event='stopped')
+                content = torrent.send_request(params, headers)
+                torrent.tracker_response_parser(content)
 
-            # get download
-            downloaded = 0
-
-            tc = self.torrentclient
-            headers = tc.get_headers()
-            params = tc.get_query(uploaded=uploaded,
-                                  downloaded=downloaded,
-                                  event='stopped')
-            content = self.send_request(params, headers)
-            self.tracker_response_parser(content)
-            self.wait()
+                torrent.timer = random.randint(10,15)*60   # interval to send request betwen 10min and 15min
+                torrent.interval = torrent.timer
+            else:
+                torrent.timer -= 1
+                waitingqueue += f"Waiting {torrent.timer} seconds for {torrent.configuration['torrent']}" + "\n"
+        os.system('cls' if os.name == 'nt' else 'clear')
+        print(waitingqueue)
+        sleep(1)
+        time -= 1
