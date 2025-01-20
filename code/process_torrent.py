@@ -21,6 +21,7 @@ class process_torrent():
         self.seedtime = self.configuration.get('seedtime')        
         self.open_torrent()
         self.torrentclient = Transmission406(self.tracker_info_hash())
+        logging.info(f"Initialized process for torrent: {self.configuration['torrent']}")
 
     def open_torrent(self):
         torrent_file = self.configuration['torrent']
@@ -33,7 +34,7 @@ class process_torrent():
             self.info['length'] = 0
             for file in self.info['files']:
                 self.info['length'] += file['length']
-            print(pretty_data(self.info['files']))
+            logging.debug(f"Files in torrent: {pretty_data(self.info['files'])}")
 
     def tracker_info_hash(self):
         raw_info = self.b_enc.get_dict('info')
@@ -45,11 +46,12 @@ class process_torrent():
 
     def send_request(self, params, headers):
         url = self.metainfo['announce']
-        print(pretty_GET(url, headers, params))
+        logging.debug(pretty_GET(url, headers, params))
         while True:
             try:
                 r = requests.get(url, params=params, headers=headers)
             except requests.exceptions.ConnectionError as e:
+                logging.warning("Connection error, retrying...")
                 sleep(1)
                 continue
             break
@@ -62,15 +64,15 @@ class process_torrent():
                               downloaded=0,
                               event='started')
 
-        print('----------- First Command to Tracker --------')
+        logging.info("Sending 'started' event to tracker.")
         content = self.send_request(params, headers)
         self.tracker_response_parser(content)
 
     def tracker_response_parser(self, tr_response):
         b_enc = bencoding()
         response = b_enc.bdecode(tr_response)
-        print('----------- Received Tracker Response --------')
-        print(pretty_data(response))
+        logging.debug("Tracker response received.")
+        logging.debug(pretty_data(response))
         raw_peers = b_enc.get_dict('peers')
         i = 0
         peers = []
@@ -83,12 +85,13 @@ class process_torrent():
             port = unpacked_port[0]
             peers.append((ip, port))
         self.interval = response['interval']
+        logging.info(f"Interval from tracker: {self.interval} seconds")
 
     def wait(self):
         random_badtime = random.randint(10,15)*60   # interval to send request betwen 10min and 15min
         self.interval = random_badtime
+        logging.info(f"Waiting for {self.interval // 60} minutes before the next tracker request.")
         pbar = tqdm(total=self.interval)
-        print('sleep: {}'.format(self.interval))
         t = 0
         while t < (self.interval):
             t += 1
@@ -100,14 +103,15 @@ class process_torrent():
         start_time = time.time()  # Start time for seeding
         while True:
             self.tracker_start_request()
-
-            print('----------- Sending Command to Tracker --------')
+            logging.info(f"Processing torrent: {self.configuration['torrent']}")
 
             # get upload
             min_up = self.interval-(self.interval*0.1)
             max_up = self.interval
             randomize_upload = random.randint(min_up, max_up)
             uploaded = int(self.configuration['upload'])*1000*randomize_upload
+            logging.info(f"Upload amount sent: {uploaded} bytes")
+            
 
             # get download
             downloaded = 0
@@ -122,7 +126,7 @@ class process_torrent():
 
             # Check if seed time limit is reached
             if self.seedtime and (time.time() - start_time) >= self.seedtime:
-                print("Seed time limit reached. Stopping process.")
+                logging.info("Seed time limit reached. Stopping process.")
                 break
 
             self.wait()
