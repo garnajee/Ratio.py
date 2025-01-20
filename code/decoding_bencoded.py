@@ -4,7 +4,7 @@ import binascii
 class bencoding():
 
     def __init__(self):
-        self.decimal_match = re.compile('\d')
+        self.decimal_match = re.compile(r'\d')
         self.data = b''
         self.dict = {}
 
