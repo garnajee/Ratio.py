@@ -52,7 +52,7 @@ class process_torrent():
                 r = requests.get(url, params=params, headers=headers)
             except requests.exceptions.ConnectionError as e:
                 logging.warning("Connection error, retrying...")
-                sleep(1)
+                time.sleep(1)
                 continue
             break
         return r.content
@@ -96,7 +96,7 @@ class process_torrent():
         while t < (self.interval):
             t += 1
             pbar.update(1)
-            sleep(1)
+            time.sleep(1)
         pbar.close()
 
     def tracker_process(self):
@@ -106,8 +106,8 @@ class process_torrent():
             logging.info(f"Processing torrent: {self.configuration['torrent']}")
 
             # get upload
-            min_up = self.interval-(self.interval*0.1)
-            max_up = self.interval
+            min_up = int(self.interval-(self.interval*0.1))
+            max_up = int(self.interval)
             randomize_upload = random.randint(min_up, max_up)
             uploaded = int(self.configuration['upload'])*1000*randomize_upload
             logging.info(f"Upload amount sent: {uploaded} bytes")
