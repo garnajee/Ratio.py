@@ -18,7 +18,7 @@ def load_configuration(configuration_file):
     with open(configuration_file) as f:
         configuration = json.load(f)
 
-    if 'torrent' not in configuration:
+    if 'torrents' not in configuration:
         return None
 
     return configuration
@@ -53,6 +53,7 @@ if __name__ == "__main__":
     
     if args.config:
         configuration = load_configuration(args.config)
+        print(configuration)
     else:
         sys.exit("No configuration file provided.")
    
@@ -71,7 +72,7 @@ if __name__ == "__main__":
 
     torrents = configuration['torrents']
     
-    process = []
+    processes = []
     for torrent_file in torrents:
         config = configuration.copy()
         config['torrent'] = torrent_file
