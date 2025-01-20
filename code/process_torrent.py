@@ -8,7 +8,7 @@ import requests
 import logging
 import random
 from tqdm import tqdm
-from time import sleep
+import time
 
 from struct import unpack
 
