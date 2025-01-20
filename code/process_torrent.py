@@ -18,6 +18,7 @@ class process_torrent():
 
     def __init__(self, configuration):
         self.configuration = configuration
+        self.seedtime = self.configuration.get('seedtime')        
         self.open_torrent()
         self.torrentclient = Transmission406(self.tracker_info_hash())
 
@@ -96,6 +97,7 @@ class process_torrent():
         pbar.close()
 
     def tracker_process(self):
+        start_time = time.time()  # Start time for seeding
         while True:
             self.tracker_start_request()
 
@@ -117,4 +119,11 @@ class process_torrent():
                                   event='stopped')
             content = self.send_request(params, headers)
             self.tracker_response_parser(content)
+
+            # Check if seed time limit is reached
+            if self.seedtime and (time.time() - start_time) >= self.seedtime:
+                print("Seed time limit reached. Stopping process.")
+                break
+
             self.wait()
+
