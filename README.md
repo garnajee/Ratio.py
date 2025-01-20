@@ -42,22 +42,35 @@ Then configure your `config.json` file.
 
 ```js
 {
-   "torrent": "<Torrent file path>",
-   "upload": "<Upload speed (kB/s)>"
+   "torrent":["<Torrent file path 1>", "<Torrent file path 2>"],
+   "upload": "<Upload speed (kB/s)>",
+   "seedtime": "2d3h15m"
 }
 ```
 
+- `torrents`: A list of one of multiples torrent files to process.
+- `upload`: The upload speed in kB/s.
+- `seedtime`: The duration to fake seed (e.g., "2d3h15m" for 2 days, 3 hours, and 15 minutes). Use "0" or "" for unlimited.
+
 ### Usage:
+
+Run the script with a configuration file:
 
 ```bash
 python3 ratio.py -c config.json 
 ```
 
-To run (multiple instances) in background :
+Enable debug mode for detailed logs:
 
 ```bash
-nohup python3 ratio.py -c config.json &
-nohup python3 ratio.py -c config.json &> nohup2.out &
+python3 ratio.py -c config.json -d
+```
+
+To run (multiple instances) in background (if you want different configurations for example):
+
+```bash
+nohup python3 ratio.py -c config1.json &
+nohup python3 ratio.py -c config2.json &> nohup2.out &
 ```
 
 View logs :
