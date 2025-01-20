@@ -3,6 +3,7 @@ import argparse
 import json
 import sys
 import re
+import logging
 
 def parse_args():
    """Create the arguments"""
@@ -10,6 +11,7 @@ def parse_args():
    parser.add_argument("-c", "--config", help="Configuration file", type=str, default="config.json")
    parser.add_argument("-s", "--speed", help="Upload speed (in kB/s)", type=str, default="350")
    parser.add_argument("-t", "--time", help="Duration to seed (in days, 0 or empty for unlimitted)", type=str, default="0")
+   parser.add_argument("-d", "--debug", help="Enable debug logging", action="store_true")
    return parser.parse_args()
 
 def load_configuration(configuration_file):
@@ -44,6 +46,11 @@ def get_time(timestring):
 
 if __name__ == "__main__":
     args = parse_args()
+    
+    # Configure logger
+    log_level = logging.DEBUG if args.debug else logging.INFO
+    logging.basicConfig(level=log_level, format="%(asctime)s - %(levelname)s - %(message)s")
+    
     if args.config:
         configuration = load_configuration(args.config)
     else:
@@ -64,10 +71,17 @@ if __name__ == "__main__":
 
     torrents = configuration['torrents']
     
+    process = []
     for torrent_file in torrents:
         config = configuration.copy()
         config['torrent'] = torrent_file
-        print(f"Starting processing for: {torrent_file}")
-        to = process_torrent(config)
-        to.tracker_process()
+
+        logging.info(f"Starting processing for: {torrent_file}")
+        process = process_torrent(config)
+        processes.append(process)
+
+    for process in processes:
+        process.tracker_process()
+
+    logging.info("All torrents are being processed.")
 
