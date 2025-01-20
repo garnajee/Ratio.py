@@ -1,4 +1,5 @@
 {
-    "torrent": "./file.torrent",
-    "upload":"350"
+    "torrents": ["./file.torrent", "./file2.torrent"],
+    "upload": "350",
+    "seedtime": "0"
 }
