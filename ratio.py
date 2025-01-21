@@ -10,7 +10,7 @@ def parse_args():
    parser = argparse.ArgumentParser(description="Fake ratio")
    parser.add_argument("-c", "--config", help="Configuration file", type=str, default="config.json")
    parser.add_argument("-s", "--speed", help="Upload speed (in kB/s)", type=str, default="350")
-   parser.add_argument("-t", "--time", help="Duration to seed (in days, 0 or empty for unlimitted)", type=str, default="0")
+   parser.add_argument("-t", "--time", help="Duration to seed (in days, 0 or empty for unlimitted)", type=str)
    parser.add_argument("-d", "--debug", help="Enable debug logging", action="store_true")
    return parser.parse_args()
 
@@ -69,6 +69,10 @@ if __name__ == "__main__":
             configuration['seedtime'] = seed_time
         else:
             configuration['seedtime'] = None
+    elif 'seedtime' in configuration and configuration['seedtime']:
+        configuration['seedtime'] = get_time(configuration['seedtime'])
+    else:
+        configuration['seedtime'] = None
 
     torrents = configuration['torrents']
     
