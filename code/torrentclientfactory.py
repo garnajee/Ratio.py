@@ -16,7 +16,7 @@ class Transmission406():
         # An additional identification that is not shared with any other peers
         parameters["key"] = self.generate_key()
         # Setting this to 1 indicates that the client accepts a compact response
-        parameters["compact"] = 0
+        parameters["compact"] = 1
         # Setting this to 1 indicates that the client accepts crypto
         parameters["supportcrypto"] = 1
         self.parameters = parameters
