@@ -5,9 +5,9 @@ get_latest_transmission_version() {
     curl -s GET "https://api.github.com/repos/transmission/transmission/tags?per_page=1" | awk -F'[:,"]' '/"name"/{print $5}'
 }
 
-# Function to get the current Transmission version from README.md
+# Function to get the current Transmission version from code/torrentclientfactory.py
 get_current_transmission_version() {
-    grep -i transmission README.md | cut -d ' ' -f 3
+    grep -o 'Transmission/[0-9.]*' code/torrentclientfactory.py | cut -d '/' -f 2
 }
 
 # Function to format version number to four digits
@@ -26,6 +26,9 @@ format_version_number() {
 latest_version=$(get_latest_transmission_version)
 current_version=$(get_current_transmission_version)
 
+echo "::set-output name=latest_version::$latest_version"
+echo "::set-output name=current_version::$current_version"
+
 # Formatting versions for class names
 current_class_version=$(echo $current_version | tr -d '.')
 latest_class_version=$(echo $latest_version | tr -d '.')
@@ -40,13 +43,9 @@ if [ "$latest_version" != "$current_version" ]; then
     # Update README.md
     sed -i "s/Transmission $current_version/Transmission $latest_version/" README.md
 
-    # Update process_torrent.py
-    sed -i "s/Transmission$current_class_version/Transmission$latest_class_version/" code/process_torrent.py
-
     # Update torrentclientfactory.py
-    sed -i "s/Transmission$current_class_version/Transmission$latest_class_version/" code/torrentclientfactory.py
-    sed -i "s/Transmission[\/\ ]$current_version/Transmission\/$latest_version/" code/torrentclientfactory.py
-    sed -i "s/-TR${current_peer_id}-/-TR${latest_peer_id}-/" code/torrentclientfactory.py
+    sed -i "s/Transmission\/$current_version/Transmission\/$latest_version/g" code/torrentclientfactory.py
+    sed -i "s/-TR${current_peer_id}-/-TR${latest_peer_id}-/g" code/torrentclientfactory.py
 
     echo "Update completed."
 else
