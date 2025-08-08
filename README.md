@@ -76,9 +76,19 @@ You can also use the command-line arguments to override the configuration:
 python3 ratio.py -c my_config.json -s 500 -t 1d
 ```
 
+### Running in the Background
+
+To run the script in the background, you can use `nohup`:
+
+```bash
+nohup python3 ratio.py > ratio.log 2>&1 &
+```
+
+This will redirect the output to a `ratio.log` file. You can view the logs with `tail -f ratio.log`.
+
 ### Running with Docker
 
-You can also run the script using Docker and Docker Compose for a more isolated and reproducible environment.
+You can also run the script using Docker and Docker Compose for a more isolated and reproducible environment. The Docker image is based on Google's distroless images, which are more secure and have a smaller footprint.
 
 1.  **Build the Docker image:**
 
