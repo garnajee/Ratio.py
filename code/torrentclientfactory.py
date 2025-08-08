@@ -2,7 +2,7 @@ import random
 import string
 
 class Transmission406():
-    def __init__(self, info_hash):
+    def __init__(self, info_hash, compact=1, supportcrypto=1):
         self.name = "Transmission/4.0.6"
         parameters = {}
         # urlencoded 20-byte SHA1 hash of the value of the info key from the Metainfo file
@@ -16,9 +16,9 @@ class Transmission406():
         # An additional identification that is not shared with any other peers
         parameters["key"] = self.generate_key()
         # Setting this to 1 indicates that the client accepts a compact response
-        parameters["compact"] = 1
+        parameters["compact"] = compact
         # Setting this to 1 indicates that the client accepts crypto
-        parameters["supportcrypto"] = 1
+        parameters["supportcrypto"] = supportcrypto
         self.parameters = parameters
 
     def get_headers(self):

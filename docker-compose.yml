@@ -1,0 +1,7 @@
+version: '3.8'
+services:
+  ratio:
+    build: .
+    volumes:
+      - ./torrents:/app/torrents
+      - ./config.json:/app/config.json
