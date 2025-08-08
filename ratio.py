@@ -74,6 +74,24 @@ def get_upload_speed(size_in_bytes, speed_config):
     else:
         return random.randint(800, 2000)
 
+def generate_table(processes, total_uploaded, time_to_next):
+    table = Table(title="Torrent Seeding Status")
+    table.add_column("Torrent Name", justify="left", style="cyan", no_wrap=True)
+    table.add_column("Size", justify="right", style="magenta")
+    table.add_column("Upload Speed", justify="right", style="green")
+    table.add_column("Total Uploaded", justify="right", style="yellow")
+    table.add_column("Next Update in", justify="right", style="red")
+
+    for process in processes:
+        torrent_name = os.path.basename(process.torrent_file)
+        size = humanize.naturalsize(process.get_torrent_size())
+        upload_speed = f"{get_upload_speed(process.get_torrent_size(), None)} kB/s"
+        total_up = humanize.naturalsize(total_uploaded[process.torrent_file])
+        next_update = f"{time_to_next}s"
+        table.add_row(torrent_name, size, upload_speed, total_up, next_update)
+
+    return table
+
 if __name__ == "__main__":
     args = parse_args()
     
@@ -161,20 +179,3 @@ if __name__ == "__main__":
 
     logging.info("All torrents are being processed.")
 
-def generate_table(processes, total_uploaded, time_to_next):
-    table = Table(title="Torrent Seeding Status")
-    table.add_column("Torrent Name", justify="left", style="cyan", no_wrap=True)
-    table.add_column("Size", justify="right", style="magenta")
-    table.add_column("Upload Speed", justify="right", style="green")
-    table.add_column("Total Uploaded", justify="right", style="yellow")
-    table.add_column("Next Update in", justify="right", style="red")
-
-    for process in processes:
-        torrent_name = os.path.basename(process.torrent_file)
-        size = humanize.naturalsize(process.get_torrent_size())
-        upload_speed = f"{get_upload_speed(process.get_torrent_size(), None)} kB/s"
-        total_up = humanize.naturalsize(total_uploaded[process.torrent_file])
-        next_update = f"{time_to_next}s"
-        table.add_row(torrent_name, size, upload_speed, total_up, next_update)
-
-    return table
