@@ -2,82 +2,100 @@
 
 [![Update Transmission Version](https://github.com/garnajee/Ratio.py/actions/workflows/update-transmission-version.yml/badge.svg)](https://github.com/garnajee/Ratio.py/actions/workflows/update-transmission-version.yml)
 
-Ratio.py is a small command line RatioMaster.Net like in Python3. It fakes upload stats of a torrent. 
-Current emulators available are:
+Ratio.py is a Python-based tool for faking torrent upload statistics, similar to RatioMaster.Net. It currently emulates the following BitTorrent client:
 
-- Transmission 4.0.6
+-   Transmission 4.0.6
 
-### Requirements
+## Features
 
-1. Python 3.x
-2. pip install -r requirements.txt
-3. a torrent file (use one with lots of leechers)
+-   **Fake Upload Stats**: Simulate uploading of torrents to improve your ratio on private trackers.
+-   **Multiple Torrents**: Process multiple torrents at once, either by specifying individual files or a directory.
+-   **Dynamic Upload Speed**: The upload speed is randomized and adjusted based on the size of the torrent, creating a more realistic seeding pattern.
+-   **Error Handling**: The script is designed to handle common tracker errors, such as "Unregistered torrent" and "Compact announce not supported," by retrying or adjusting its parameters.
+-   **Docker Support**: Run the script in a lightweight, isolated environment using Docker and Docker Compose.
 
-### Download
+## Getting Started
 
-Using `git` command:
+### Prerequisites
 
-```bash
-git clone https://github.com/garnajee/Ratio.py.git
-```
+-   Python 3.x
+-   Pip
 
-Or using `cURL`:
+### Installation
 
-```bash
-curl -L https://github.com/garnajee/Ratio.py/archive/master.tar.gz -o Ratio.py.tar.gz
-tar xzf Ratio.py.tar.gz
-rm Ratio.py.tar.gz
-mv Ratio.py-master Ratio.py
-```
+1.  **Clone the repository:**
 
-Navigate to the folder:
+    ```bash
+    git clone https://github.com/garnajee/Ratio.py.git
+    cd Ratio.py
+    ```
 
-```bash
-cd Ratio.py
-```
+2.  **Install the dependencies:**
 
-Then configure your `config.json` file.
+    ```bash
+    pip install -r requirements.txt
+    ```
 
-### Configuration example
+## Configuration
 
-```js
+The script is configured using a `config.json` file. Here's an example:
+
+```json
 {
-   "torrent":["<Torrent file path 1>", "<Torrent file path 2>"],
-   "upload": "<Upload speed (kB/s)>",
-   "seedtime": "2d3h15m"
+    "torrents": ["./torrents", "./another.torrent"],
+    "upload": "350",
+    "seedtime": "2d3h15m"
 }
 ```
 
-- `torrents`: A list of one of multiples torrent files to process.
-- `upload`: The upload speed in kB/s.
-- `seedtime`: The duration to fake seed (e.g., "2d3h15m" for 2 days, 3 hours, and 15 minutes). Use "0" or "" for unlimited.
+-   `torrents`: A path to a `.torrent` file, or a directory containing `.torrent` files. You can also provide a list of paths.
+-   `upload` (optional): A fixed upload speed in kB/s. If not provided, the script will use a dynamic speed based on the torrent size.
+-   `seedtime` (optional): The duration to fake seed (e.g., "2d3h15m" for 2 days, 3 hours, and 15 minutes). Use "0" or an empty string for unlimited seeding.
 
-### Usage:
+## Usage
 
-Run the script with a configuration file:
+### Command-Line Arguments
 
-```bash
-python3 ratio.py -c config.json 
-```
+-   `-c`, `--config`: Path to the configuration file (default: `config.json`).
+-   `-s`, `--speed`: Override the upload speed from the configuration file (in kB/s).
+-   `-t`, `--time`: Override the seed time from the configuration file.
+-   `-d`, `--debug`: Enable debug logging.
+-   `-h`, `--help`: Show the help message.
 
-Enable debug mode for detailed logs:
+### Running the Script
 
-```bash
-python3 ratio.py -c config.json -d
-```
-
-To run (multiple instances) in background (if you want different configurations for example):
+To run the script, use the following command:
 
 ```bash
-nohup python3 ratio.py -c config1.json &
-nohup python3 ratio.py -c config2.json &> nohup2.out &
+python3 ratio.py
 ```
 
-View logs :
+You can also use the command-line arguments to override the configuration:
 
 ```bash
-tail -f nohup.out
+python3 ratio.py -c my_config.json -s 500 -t 1d
 ```
+
+### Running with Docker
+
+You can also run the script using Docker and Docker Compose for a more isolated and reproducible environment.
+
+1.  **Build the Docker image:**
+
+    ```bash
+    docker-compose build
+    ```
+
+2.  **Run the script:**
+
+    ```bash
+    docker-compose up
+    ```
+
+    The script will use the `config.json` file and the `torrents` directory from your host machine.
+
+## Disclaimer
+
+This tool is for educational purposes only. Using it may be against the terms of service of some trackers. Use it at your own risk.
 
 *This project is an updated fork of [this project](https://github.com/MisterDaneel/Ratio.py).*
-
