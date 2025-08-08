@@ -61,7 +61,8 @@ def get_torrent_files(path):
 
 def get_upload_speed(size_in_bytes, speed_config):
     if speed_config:
-        return int(speed_config)
+        base_speed = int(speed_config)
+        return random.randint(int(base_speed * 0.8), int(base_speed * 1.2))
 
     # size in MB
     size_in_mb = size_in_bytes / 1024 / 1024
