@@ -1,5 +1,8 @@
 {
     "torrents": ["./file1.torrent", "./file2.torrent"],
     "upload": "350",
-    "seedtime": "0"
+    "download": "0",
+    "seedtime": "0",
+    "min_interval": 120,
+    "max_interval": 300
 }

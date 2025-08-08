@@ -7,7 +7,10 @@ import logging
 import os
 import time
 import random
-from tqdm import tqdm
+from rich.console import Console
+from rich.live import Live
+from rich.table import Table
+import humanize
 
 def parse_args():
    """Create the arguments"""
@@ -90,7 +93,10 @@ if __name__ == "__main__":
     if args.speed:
         configuration['upload'] = args.speed
     else:
-        configuration['upload'] = None
+        configuration['upload'] = configuration.get('upload')
+
+    if 'download' not in configuration:
+        configuration['download'] = 0
 
     if args.time:
         seed_time = get_time(args.time)
@@ -123,34 +129,52 @@ if __name__ == "__main__":
     for process in processes:
         process.tracker_start_request()
 
+    min_interval = configuration.get('min_interval', 120)
+    max_interval = configuration.get('max_interval', 300)
+
     start_time = time.time()
-    while True:
+    total_uploaded = {p.torrent_file: 0 for p in processes}
 
-        # Check if seed time limit is exceeded
-        elapsed_time = time.time() - start_time
-        if configuration['seedtime'] and elapsed_time >= configuration['seedtime']:
-            logging.info("Seed time limit reached. Stopping all processes.")
-            break
+    console = Console()
+    with Live(generate_table(processes, total_uploaded, 0), console=console, screen=True, vertical_overflow="visible") as live:
+        while True:
+            interval = random.randint(min_interval, max_interval)
 
-        # All torrents will have the same interval
-        # Get the interval from the first torrent, if not set, set it to 15 minutes
-        interval = processes[0].interval if processes[0].interval else 900
+            # Countdown for the interval
+            for i in range(interval, 0, -1):
+                live.update(generate_table(processes, total_uploaded, i))
+                time.sleep(1)
+                elapsed_time = time.time() - start_time
+                if configuration['seedtime'] and elapsed_time >= configuration['seedtime']:
+                    logging.info("Seed time limit reached. Stopping all processes.")
+                    break
 
-        # Wait for the interval
-        pbar = tqdm(total=interval, desc="Waiting", leave=False)
-        for i in range(interval):
-            time.sleep(1)
-            pbar.update(1)
             elapsed_time = time.time() - start_time
             if configuration['seedtime'] and elapsed_time >= configuration['seedtime']:
                 break
-        pbar.close()
 
-
-        for process in processes:
-            upload_speed = get_upload_speed(process.get_torrent_size(), configuration['upload'])
-            uploaded = upload_speed * 1024 * interval
-            process.tracker_update_request(uploaded=uploaded, downloaded=0)
+            for process in processes:
+                upload_speed = get_upload_speed(process.get_torrent_size(), configuration['upload'])
+                uploaded = upload_speed * 1024 * interval
+                total_uploaded[process.torrent_file] += uploaded
+                process.tracker_update_request(uploaded=total_uploaded[process.torrent_file], downloaded=int(configuration['download']))
 
     logging.info("All torrents are being processed.")
 
+def generate_table(processes, total_uploaded, time_to_next):
+    table = Table(title="Torrent Seeding Status")
+    table.add_column("Torrent Name", justify="left", style="cyan", no_wrap=True)
+    table.add_column("Size", justify="right", style="magenta")
+    table.add_column("Upload Speed", justify="right", style="green")
+    table.add_column("Total Uploaded", justify="right", style="yellow")
+    table.add_column("Next Update in", justify="right", style="red")
+
+    for process in processes:
+        torrent_name = os.path.basename(process.torrent_file)
+        size = humanize.naturalsize(process.get_torrent_size())
+        upload_speed = f"{get_upload_speed(process.get_torrent_size(), None)} kB/s"
+        total_up = humanize.naturalsize(total_uploaded[process.torrent_file])
+        next_update = f"{time_to_next}s"
+        table.add_row(torrent_name, size, upload_speed, total_up, next_update)
+
+    return table
