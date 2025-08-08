@@ -74,21 +74,27 @@ def get_upload_speed(size_in_bytes, speed_config):
     else:
         return random.randint(800, 2000)
 
-def generate_table(processes, total_uploaded, time_to_next):
+def generate_table(processes, total_uploaded, upload_speeds, time_to_next):
     table = Table(title="Torrent Seeding Status")
-    table.add_column("Torrent Name", justify="left", style="cyan", no_wrap=True)
+    table.add_column("File Name", justify="left", style="cyan", no_wrap=True)
+    table.add_column("Torrent Name", justify="left", style="white", no_wrap=True)
     table.add_column("Size", justify="right", style="magenta")
+    table.add_column("Seeders", justify="right", style="blue")
+    table.add_column("Leechers", justify="right", style="blue")
     table.add_column("Upload Speed", justify="right", style="green")
     table.add_column("Total Uploaded", justify="right", style="yellow")
     table.add_column("Next Update in", justify="right", style="red")
 
     for process in processes:
-        torrent_name = os.path.basename(process.torrent_file)
+        file_name = os.path.basename(process.torrent_file)
+        torrent_name = process.get_torrent_name()
         size = humanize.naturalsize(process.get_torrent_size())
-        upload_speed = f"{get_upload_speed(process.get_torrent_size(), None)} kB/s"
+        seeders = str(process.seeders)
+        leechers = str(process.leechers)
+        upload_speed = f"{upload_speeds.get(process.torrent_file, 0)} kB/s"
         total_up = humanize.naturalsize(total_uploaded[process.torrent_file])
         next_update = f"{time_to_next}s"
-        table.add_row(torrent_name, size, upload_speed, total_up, next_update)
+        table.add_row(file_name, torrent_name, size, seeders, leechers, upload_speed, total_up, next_update)
 
     return table
 
@@ -154,13 +160,14 @@ if __name__ == "__main__":
     total_uploaded = {p.torrent_file: 0 for p in processes}
 
     console = Console()
-    with Live(generate_table(processes, total_uploaded, 0), console=console, screen=True, vertical_overflow="visible") as live:
+    with Live(generate_table(processes, total_uploaded, {}, 0), console=console, screen=True, vertical_overflow="visible") as live:
         while True:
             interval = random.randint(min_interval, max_interval)
+            upload_speeds = {p.torrent_file: get_upload_speed(p.get_torrent_size(), configuration['upload']) for p in processes}
 
             # Countdown for the interval
             for i in range(interval, 0, -1):
-                live.update(generate_table(processes, total_uploaded, i))
+                live.update(generate_table(processes, total_uploaded, upload_speeds, i))
                 time.sleep(1)
                 elapsed_time = time.time() - start_time
                 if configuration['seedtime'] and elapsed_time >= configuration['seedtime']:
@@ -172,7 +179,7 @@ if __name__ == "__main__":
                 break
 
             for process in processes:
-                upload_speed = get_upload_speed(process.get_torrent_size(), configuration['upload'])
+                upload_speed = upload_speeds[process.torrent_file]
                 uploaded = upload_speed * 1024 * interval
                 total_uploaded[process.torrent_file] += uploaded
                 process.tracker_update_request(uploaded=total_uploaded[process.torrent_file], downloaded=int(configuration['download']))

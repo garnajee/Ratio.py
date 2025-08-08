@@ -21,7 +21,12 @@ class process_torrent():
         self.open_torrent()
         self.torrentclient = Transmission406(self.tracker_info_hash(), compact=compact, supportcrypto=supportcrypto)
         self.interval = None
+        self.seeders = 0
+        self.leechers = 0
         logging.info(f"Initialized process for torrent: {self.torrent_file}")
+
+    def get_torrent_name(self):
+        return self.info.get('name', 'N/A')
 
     def open_torrent(self):
         with open(self.torrent_file, 'rb') as tf:
@@ -145,4 +150,10 @@ class process_torrent():
         if 'interval' in response:
             self.interval = response['interval']
             logging.info(f"Interval from tracker: {self.interval} seconds")
+
+        if 'complete' in response:
+            self.seeders = response['complete']
+
+        if 'incomplete' in response:
+            self.leechers = response['incomplete']
 
