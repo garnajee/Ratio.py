@@ -161,28 +161,31 @@ if __name__ == "__main__":
 
     console = Console()
     with Live(generate_table(processes, total_uploaded, {}, 0), console=console, screen=True, vertical_overflow="visible") as live:
-        while True:
-            interval = random.randint(min_interval, max_interval)
-            upload_speeds = {p.torrent_file: get_upload_speed(p.get_torrent_size(), configuration['upload']) for p in processes}
+        try:
+            while True:
+                interval = random.randint(min_interval, max_interval)
+                upload_speeds = {p.torrent_file: get_upload_speed(p.get_torrent_size(), configuration['upload']) for p in processes}
 
-            # Countdown for the interval
-            for i in range(interval, 0, -1):
-                live.update(generate_table(processes, total_uploaded, upload_speeds, i))
-                time.sleep(1)
+                for process in processes:
+                    upload_speed = upload_speeds[process.torrent_file]
+                    uploaded = upload_speed * 1024 * interval
+                    total_uploaded[process.torrent_file] += uploaded
+                    process.tracker_update_request(uploaded=total_uploaded[process.torrent_file], downloaded=int(configuration['download']))
+
+                # Countdown for the interval
+                for i in range(interval, 0, -1):
+                    live.update(generate_table(processes, total_uploaded, upload_speeds, i))
+                    time.sleep(1)
+                    elapsed_time = time.time() - start_time
+                    if configuration['seedtime'] and elapsed_time >= configuration['seedtime']:
+                        logging.info("Seed time limit reached. Stopping all processes.")
+                        break
+
                 elapsed_time = time.time() - start_time
                 if configuration['seedtime'] and elapsed_time >= configuration['seedtime']:
-                    logging.info("Seed time limit reached. Stopping all processes.")
                     break
-
-            elapsed_time = time.time() - start_time
-            if configuration['seedtime'] and elapsed_time >= configuration['seedtime']:
-                break
-
-            for process in processes:
-                upload_speed = upload_speeds[process.torrent_file]
-                uploaded = upload_speed * 1024 * interval
-                total_uploaded[process.torrent_file] += uploaded
-                process.tracker_update_request(uploaded=total_uploaded[process.torrent_file], downloaded=int(configuration['download']))
+        except KeyboardInterrupt:
+            pass
 
     logging.info("All torrents are being processed.")
 
