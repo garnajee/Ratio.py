@@ -29,17 +29,19 @@ class Transmission406():
         return headers
 
     def get_query(self, uploaded, downloaded, left=0, event=None):
+        # copy initial parameters
+        params_copy = self.parameters.copy()
         # The total amount uploaded (since the client sent the 'started' event)
-        self.parameters["uploaded"] = uploaded
+        params_copy["uploaded"] = uploaded
         # The total amount downloaded (since the client sent the 'started' event)
-        self.parameters["downloaded"] = downloaded
+        params_copy["downloaded"] = downloaded
         # The number of bytes this client still has to download
-        self.parameters["left"] = left
+        params_copy["left"] = left
         # If specified, must be one of started, completed, stopped
         if event:
-            self.parameters["event"] = event
+            params_copy["event"] = event
         params = '&'.join('{}={}'.format(k, v)
-                          for k, v in self.parameters.items())
+                          for k, v in params_copy.items())
         return params
 
     def id_generator(self, chars, size):

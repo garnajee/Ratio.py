@@ -163,19 +163,17 @@ if __name__ == "__main__":
     console = Console()
     with Live(generate_table(processes, total_uploaded, {}, 0), console=console, screen=True, vertical_overflow="visible") as live:
         try:
+            # Initialise a default interval for the first round
+            intervals = {p.torrent_file: random.randint(min_interval, max_interval) for p in processes}
+            
             while True:
-                interval = random.randint(min_interval, max_interval)
-                upload_speeds = {p.torrent_file: get_upload_speed(p.get_torrent_size(), configuration['upload']) for p in processes}
-
-                for process in processes:
-                    upload_speed = upload_speeds[process.torrent_file]
-                    uploaded = upload_speed * 1024 * interval
-                    total_uploaded[process.torrent_file] += uploaded
-                    process.tracker_update_request(uploaded=total_uploaded[process.torrent_file], downloaded=int(configuration['download']))
-
+                # Use the shortest interval of all torrents for the countdown
+                # This ensures that we update each torrent on time
+                sleep_interval = min(intervals.values())
+                
                 # Countdown for the interval
-                for i in range(interval, 0, -1):
-                    live.update(generate_table(processes, total_uploaded, upload_speeds, i))
+                for i in range(sleep_interval, 0, -1):
+                    live.update(generate_table(processes, total_uploaded, upload_speeds if 'upload_speeds' in locals() else {}, i))
                     time.sleep(1)
                     elapsed_time = time.time() - start_time
                     if configuration['seedtime'] and elapsed_time >= configuration['seedtime']:
@@ -185,6 +183,25 @@ if __name__ == "__main__":
                 elapsed_time = time.time() - start_time
                 if configuration['seedtime'] and elapsed_time >= configuration['seedtime']:
                     break
+
+                upload_speeds = {p.torrent_file: get_upload_speed(p.get_torrent_size(), configuration['upload']) for p in processes}
+
+                for process in processes:
+                    # The actual time interval since the last update is the one we have just waited for.
+                    current_interval = sleep_interval 
+                    upload_speed = upload_speeds[process.torrent_file]
+                    uploaded_this_round = upload_speed * 1024 * current_interval
+                    total_uploaded[process.torrent_file] += uploaded_this_round
+                    process.tracker_update_request(uploaded=total_uploaded[process.torrent_file], downloaded=int(configuration['download']))
+
+                    # Update the interval for the next round with the tracker value
+                    # Ensure that the tracker interval is respected, otherwise use the config
+                    if process.interval and process.interval > 0:
+                        # Add a little variation so you're not too predictable.
+                        intervals[process.torrent_file] = process.interval + random.randint(0, 30)
+                    else:
+                        intervals[process.torrent_file] = random.randint(min_interval, max_interval)
+
         except KeyboardInterrupt:
             pass
 
